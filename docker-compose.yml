@@ -2,7 +2,7 @@ version: "3.9"
 services:
   postgres:
     image: postgres:15
-    container_name: store_front_api_db
+    container_name: booking_service_db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: builder
-    container_name: store_front_api_app_dev
+    container_name: booking_service_api_app_dev
     ports:
       - "3000:3000"
     depends_on:
@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: store_front_api_app
+    container_name: booking_service_api_app
     ports:
       - "3000:3000"
     depends_on:
@@ -71,7 +71,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: test
-    container_name: store_front_api_app_test
+    container_name: booking_service_api_app_test
     depends_on:
       postgres:
         condition: service_healthy

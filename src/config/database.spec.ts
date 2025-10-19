@@ -24,7 +24,7 @@ describe("Checking the users table", () => {
   });
 
   it("should verify that all columns exist in 'users' table", async () => {
-    const columns = ["id", "firstName", "lastName", "password"];
+    const columns = ["id", "fullName", "email", "phone","password"];
     const result = await pool.query(
       `
       SELECT COUNT(*) AS col_count

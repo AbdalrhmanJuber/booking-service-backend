@@ -16,18 +16,23 @@ exports.setup = function (options, seedLink) {
 
 
 exports.up = function (db) {
-  return db.createTable("users", {
-    id: { type: "int", primaryKey: true, autoIncrement: true },
-    fullName: { type: "string", notNull: true },
-    email: { type: "string", notNull: true },
-    phone: {type: "string", notNull: true},
-    password: { type: "string", notNull: true },
-  });
+  return db
+    .createTable("users", {
+      id: { type: "int", primaryKey: true, autoIncrement: true },
+      fullName: { type: "string", notNull: true },
+      email: { type: "string", notNull: true, unique: true },
+      phone: { type: "string", notNull: true },
+      password: { type: "string", notNull: true },
+    })
+    .then(() => {
+      return db.addIndex("users", "idx_users_email", ["email"], true);
+    });
 };
 
-
 exports.down = function (db) {
-  return db.dropTable("users");
+  return db
+    .removeIndex("users", "idx_users_email")
+    .then(() => db.dropTable("users"));
 };
 
 exports._meta = {

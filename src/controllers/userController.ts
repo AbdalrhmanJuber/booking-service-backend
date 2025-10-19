@@ -4,7 +4,7 @@ import { generateToken } from "../helpers/jwt";
 import { parseId, ValidationError } from "../utils/validators";
 
 
-type IdParams = { id: string };
+type EmailParams = { email: string };
 
 export class UserController {
    
@@ -20,17 +20,17 @@ export class UserController {
     }
   }
 
-  async getById(req: Request<IdParams>, res: Response) {
+  async getByEmail(req: Request<{email: string}>, res: Response) {
     try {
-      const id = parseId(req.params?.id, "user");
-      const user = await this.userModel.getById(id);
+      const email = req.params?.email;
+      const user = await this.userModel.getByEmail(email);
       if (!user) return res.status(404).json({ message: "User not found" });
       res.json(user);
     } catch (error) {
       if (error instanceof ValidationError) {
         return res.status(400).json({ message: error.message });
       }
-      console.error("Error getting user by ID:", error);
+      console.error("Error getting user by Email:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
@@ -41,8 +41,9 @@ export class UserController {
 
       const token = generateToken({
         id: newUser.id!,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        phone: newUser.phone
       });
 
       res.status(201).json({
@@ -55,10 +56,10 @@ export class UserController {
     }
   }
 
-  async update(req: Request<IdParams>, res: Response) {
+  async update(req: Request<EmailParams>, res: Response) {
     try {
-      const id = parseId(req.params?.id, "user");
-      const updated = await this.userModel.update(id, req.body);
+      const email = req.params?.email;
+      const updated = await this.userModel.update(email, req.body);
       if (!updated) return res.status(404).json({ message: "User not found" });
       res.json(updated);
     } catch (error) {
@@ -70,10 +71,10 @@ export class UserController {
     }
   }
 
-  async delete(req: Request<IdParams>, res: Response) {
+  async delete(req: Request<EmailParams>, res: Response) {
     try {
-      const id = parseId(req.params?.id, "user");
-      const deleted = await this.userModel.delete(id);
+      const email = req.params?.email;
+      const deleted = await this.userModel.delete(email);
       if (!deleted) return res.status(404).json({ message: "User not found" });
       res.json({ message: "User deleted" });
     } catch (error) {
@@ -87,8 +88,8 @@ export class UserController {
 
   async authenticateUser(req: Request, res: Response) {
     try {
-      const { firstName, password } = req.body;
-      const user = await this.userModel.authenticate(firstName, password);
+      const { email, password } = req.body;
+      const user = await this.userModel.authenticate(email, password);
 
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
@@ -96,16 +97,18 @@ export class UserController {
 
       const token = generateToken({
         id: user.id!,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone
       });
 
       res.json({
         message: "Login successful",
         user: {
           id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone
         },
         token: token,
       });

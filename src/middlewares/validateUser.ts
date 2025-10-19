@@ -1,16 +1,35 @@
 import { Request, Response, NextFunction } from "express";
+import {
+  ValidationError,
+  getMissingFields,
+  validateFullName,
+  validatePalestinePhone,
+  validateEmail,
+  validatePassword,
+} from "../utils/validators";
 
 export const validateUserInput = (req: Request, res: Response, next: NextFunction) => {
-  const { firstName, lastName, password} = req.body;
+  try {
+    const { fullName, email, phone, password } = req.body;
+    
+    // Check missing fields
+    const missing = getMissingFields(req.body, ["fullName", "email", "phone", "password"]);
+    if (missing.length) {
+      return res.status(400).json({ message: `Missing required fields: ${missing.join(", ")}` });
+    }
 
-  if (!firstName || !lastName || !password) {
-    return res.status(400).json({ message: "Missing required fields: firstName, lastName, password" });
+    // Validate fields
+    validateFullName(fullName);
+    validateEmail(email);
+    validatePalestinePhone(phone);
+    validatePassword(password);
+
+    next();
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      return res.status(400).json({ message: err.message });
+    }
+    next(err);
   }
-
-  if (password.length < 6) {
-    return res.status(400).json({ message: "Password must be at least 6 characters long" });
-  }
-
-  next();
 };
 

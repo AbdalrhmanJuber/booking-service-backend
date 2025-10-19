@@ -1,1 +1,1 @@
-CREATE DATABASE store_front_test OWNER admin;
+CREATE DATABASE booking_service_test OWNER admin;

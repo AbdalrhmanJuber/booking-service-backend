@@ -6,8 +6,9 @@ dotenv.config();
 
 export interface IUser {
   id?: number;
-  firstName: string;
-  lastName: string;
+  fullName: string;
+  email: string;
+  phone: string;
   password: string;
 }
 
@@ -34,25 +35,26 @@ export class User {
     const result = await this.pool.query(
       `SELECT
          id,
-         "firstName",
-         "lastName" ,
+         "fullName",
+         "email",
+         "phone",
          "password"
        FROM users`,
     );
     return result.rows;
   }
 
-  async getById(id: number): Promise<IUser | null> {
+  async getByEmail(email: string): Promise<IUser | null> {
     const result = await this.pool.query(
       `SELECT
-
          id,
-         "firstName",
-         "lastName" ,
+         "fullName",
+         "email",
+         "phone",
          "password"
        FROM users
-       WHERE id = $1`,
-      [id],
+       WHERE email = $1`,
+      [email],
     );
     return result.rows[0] || null;
   }
@@ -60,46 +62,50 @@ export class User {
   async create(user: IUser): Promise<IUser> {
     const hashedPassword = await this.hashPassword(user.password);
     const result = await this.pool.query(
-      `INSERT INTO users ("firstName", "lastName", "password") VALUES ($1, $2, $3) RETURNING id, "firstName",
-         "lastName" ,
+      `INSERT INTO users ("fullName", "email", "phone","password") VALUES ($1, $2, $3, $4) RETURNING id, "fullName",
+         "email",
+         "phone",
          "password" `,
-      [user.firstName, user.lastName, hashedPassword],
+      [user.fullName, user.email, user.phone, hashedPassword],
     );
     return result.rows[0];
   }
 
-  async update(id: number, user: IUser): Promise<IUser | null> {
+  async update(email: string, user: IUser): Promise<IUser | null> {
     const hashedPassword = await this.hashPassword(user.password);
     const result = await this.pool.query(
       `UPDATE users
-         SET "firstName" = $1,
-             "lastName"  = $2,
+         SET "fullName" = $1,
+              "phone" = $2,
              "password"  = $3
-       WHERE id = $4
+       WHERE email = $4
        RETURNING
          id,
-         "firstName" ,
-         "lastName" ,
+         "fullName" ,
+         "email",
+        "phone",
          "password" `,
-      [user.firstName, user.lastName, hashedPassword, id],
+      [user.fullName, user.phone,hashedPassword, email],
     );
     return result.rows[0] || null;
   }
 
-  async delete(id: number): Promise<boolean> {
-    const result = await this.pool.query("DELETE FROM users WHERE id = $1", [id]);
+  async delete(email: string): Promise<boolean> {
+    const result = await this.pool.query("DELETE FROM users WHERE email = $1", [
+      email,
+    ]);
     return result.rowCount! > 0;
   }
 
   async authenticate(
-    firstName: string,
+    email: string,
     password: string,
   ): Promise<IUser | null> {
     const result = await this.pool.query(
-      `SELECT id, "firstName", "lastName", "password"
+      `SELECT id, "fullName", "email", "phone", "password"
         FROM users
-        WHERE "firstName" = $1`,
-      [firstName],
+        WHERE "email" = $1`,
+      [email],
     );
 
     const user = result.rows[0];
