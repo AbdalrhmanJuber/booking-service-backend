@@ -37,8 +37,7 @@ export class User {
          id,
          "fullName",
          "email",
-         "phone",
-         "password"
+         "phone"
        FROM users`,
     );
     return result.rows;
@@ -50,8 +49,7 @@ export class User {
          id,
          "fullName",
          "email",
-         "phone",
-         "password"
+         "phone"
        FROM users
        WHERE email = $1`,
       [email],
@@ -64,8 +62,7 @@ export class User {
     const result = await this.pool.query(
       `INSERT INTO users ("fullName", "email", "phone","password") VALUES ($1, $2, $3, $4) RETURNING id, "fullName",
          "email",
-         "phone",
-         "password" `,
+         "phone"`,
       [user.fullName, user.email, user.phone, hashedPassword],
     );
     return result.rows[0];
@@ -83,8 +80,7 @@ export class User {
          id,
          "fullName" ,
          "email",
-        "phone",
-         "password" `,
+        "phone"`,
       [user.fullName, user.phone,hashedPassword, email],
     );
     return result.rows[0] || null;
@@ -102,7 +98,7 @@ export class User {
     password: string,
   ): Promise<IUser | null> {
     const result = await this.pool.query(
-      `SELECT id, "fullName", "email", "phone", "password"
+      `SELECT id, "fullName", "email", "phone", "password" 
         FROM users
         WHERE "email" = $1`,
       [email],

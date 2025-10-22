@@ -21,6 +21,6 @@ router.put(
 );
 router.delete("/:email", authenticate, controller.delete.bind(controller));
 
-router.post("/login",authRateLimit,controller.authenticateUser.bind(controller)); // login
-router.post("/", validateUserInput, controller.create.bind(controller)); // Register
+router.post("/signin",authRateLimit,controller.authenticateUser.bind(controller)); // login
+router.post("/signup", validateUserInput, controller.create.bind(controller)); // Register
 export default router;

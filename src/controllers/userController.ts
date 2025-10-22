@@ -3,11 +3,9 @@ import { User, IUser } from "../models/User";
 import { generateToken } from "../helpers/jwt";
 import { parseId, ValidationError } from "../utils/validators";
 
-
 type EmailParams = { email: string };
 
 export class UserController {
-   
   constructor(private userModel: User) {}
 
   async getAll(req: Request, res: Response) {
@@ -20,7 +18,7 @@ export class UserController {
     }
   }
 
-  async getByEmail(req: Request<{email: string}>, res: Response) {
+  async getByEmail(req: Request<{ email: string }>, res: Response) {
     try {
       const email = req.params?.email;
       const user = await this.userModel.getByEmail(email);
@@ -43,14 +41,20 @@ export class UserController {
         id: newUser.id!,
         fullName: newUser.fullName,
         email: newUser.email,
-        phone: newUser.phone
+        phone: newUser.phone,
       });
 
       res.status(201).json({
-        ...newUser,
-        token: token,
+        id: newUser.id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        phone: newUser.phone,
+        token,
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error.code === "23505") {
+        return res.status(400).json({ message: "Email already exists" });
+      }
       console.error("Error creating user:", error);
       res.status(500).json({ message: "Internal server error" });
     }
@@ -99,7 +103,7 @@ export class UserController {
         id: user.id!,
         fullName: user.fullName,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
       });
 
       res.json({
@@ -108,7 +112,7 @@ export class UserController {
           id: user.id,
           fullName: user.fullName,
           email: user.email,
-          phone: user.phone
+          phone: user.phone,
         },
         token: token,
       });

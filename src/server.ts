@@ -6,6 +6,7 @@ import { connectDB } from "./config/database";
 import { errorHandler } from "./middlewares/errorHandler";
 import morgan from "morgan";
 import { apiRateLimit } from "./config/rateLimits";
+import cors from "cors";
 
 dotenv.config();
 
@@ -14,6 +15,12 @@ validateEnv();
 
 const app: express.Application = express();
 const port: number = +process.env.PORT!;
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:4200",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
 
 app.use(apiRateLimit);
 app.use(express.json());

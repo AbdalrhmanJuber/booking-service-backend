@@ -15,7 +15,7 @@ describe("User API Endpoints", () => {
 
   describe("POST /api/users - Create User", () => {
     it("should create a new user successfully", async () => {
-      const res = await request.post("/api/users").send({
+      const res = await request.post("/api/users/signup").send({
         fullName: "Alice",
         email: "example@test.com",
         phone: "0599123456", // Valid Palestinian number
@@ -32,9 +32,19 @@ describe("User API Endpoints", () => {
       userEmail = res.body.email;
       authToken = res.body.token;
     });
+    it("should return 400 when trying to create a user with an existing email", async () => {
+      const res = await request.post("/api/users/signup").send({
+        fullName: "Duplicate Alice",
+        email: "example@test.com", // same email as before
+        phone: "0599111111",
+        password: "another_password_123",
+      });
 
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe("Email already exists");
+    });
     it("should return 400 when required fields are missing", async () => {
-      const res = await request.post("/api/users").send({
+      const res = await request.post("/api/users/signup").send({
         email: "missing@test.com",
         password: "new_password",
       });
@@ -44,7 +54,7 @@ describe("User API Endpoints", () => {
     });
 
     it("should return 400 when password is less than 6 characters", async () => {
-      const res = await request.post("/api/users").send({
+      const res = await request.post("/api/users/signup").send({
         fullName: "Bob",
         email: "bob@test.com",
         phone: "0599234567",
@@ -58,7 +68,7 @@ describe("User API Endpoints", () => {
     });
 
     it("should return 400 for invalid Palestinian phone numbers", async () => {
-      const res = await request.post("/api/users").send({
+      const res = await request.post("/api/users/signup").send({
         fullName: "Charlie",
         email: "charlie@test.com",
         phone: "0123456789", // Invalid
@@ -72,7 +82,7 @@ describe("User API Endpoints", () => {
     });
 
     it("should return 400 for invalid email format", async () => {
-      const res = await request.post("/api/users").send({
+      const res = await request.post("/api/users/signup").send({
         fullName: "Dana",
         email: "invalid-email",
         phone: "0599123456",
