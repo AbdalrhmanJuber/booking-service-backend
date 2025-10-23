@@ -60,7 +60,9 @@ export class User {
   async create(user: IUser): Promise<IUser> {
     const hashedPassword = await this.hashPassword(user.password);
     const result = await this.pool.query(
-      `INSERT INTO users ("fullName", "email", "phone","password") VALUES ($1, $2, $3, $4) RETURNING id, "fullName",
+      `INSERT INTO users ("fullName", "email", "phone","password") VALUES ($1, $2, $3, $4) RETURNING 
+         id,
+         "fullName",
          "email",
          "phone"`,
       [user.fullName, user.email, user.phone, hashedPassword],
@@ -80,8 +82,8 @@ export class User {
          id,
          "fullName" ,
          "email",
-        "phone"`,
-      [user.fullName, user.phone,hashedPassword, email],
+         "phone"`,
+      [user.fullName, user.phone, hashedPassword, email],
     );
     return result.rows[0] || null;
   }
@@ -93,12 +95,9 @@ export class User {
     return result.rowCount! > 0;
   }
 
-  async authenticate(
-    email: string,
-    password: string,
-  ): Promise<IUser | null> {
+  async authenticate(email: string, password: string): Promise<IUser | null> {
     const result = await this.pool.query(
-      `SELECT id, "fullName", "email", "phone", "password" 
+      `SELECT id, "fullName", "email", "phone", "password"
         FROM users
         WHERE "email" = $1`,
       [email],

@@ -10,7 +10,7 @@ import {
 export const validateUpdateUserInput = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { fullName, phone, password } = req.body;
@@ -40,4 +40,3 @@ export const validateUpdateUserInput = (
     next(err);
   }
 };
-

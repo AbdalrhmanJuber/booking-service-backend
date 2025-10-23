@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { User } from "../models/User";
 import { generateToken } from "../helpers/jwt";
 import { ValidationError } from "../utils/validators";
-import { asyncHandler } from "../middlewares/errorHandler"; // import your wrapper
+import { asyncHandler } from "../middlewares/errorHandler";
 import { DuplicateEmailError, NotFoundError } from "../utils/errors";
 
 type EmailParams = { email?: string };
@@ -11,7 +11,7 @@ export class UserController {
   constructor(private userModel: User) {}
 
   // GET /api/users
-  getAll = asyncHandler(async (req: Request, res: Response) => {
+  getAll = asyncHandler(async (_req: Request, res: Response) => {
     const users = await this.userModel.getAll();
     res.json(users);
   });

@@ -86,6 +86,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      NODE_ENV: test
       DB_HOST: postgres
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
