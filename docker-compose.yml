@@ -1,5 +1,9 @@
 version: "3.9"
+
 services:
+  # -------------------------------
+  # 🗄️ PostgreSQL Database
+  # -------------------------------
   postgres:
     image: postgres:15
     container_name: booking_service_db
@@ -18,12 +22,14 @@ services:
       timeout: 5s
       retries: 5
 
-  # Development service
+  # -------------------------------
+  # 🧑‍💻 Development Service (Hot Reload)
+  # -------------------------------
   app-dev:
     build:
       context: .
       dockerfile: Dockerfile
-      target: builder
+      target: dev        # ✅ use the new dev stage
     container_name: booking_service_api_app_dev
     ports:
       - "3000:3000"
@@ -37,11 +43,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
     volumes:
-      - .:/app
-      - /app/node_modules
-    command: npm run dev
+      - .:/app               # ✅ mount local source for live reload
+      - /app/node_modules    # ✅ prevent overwriting node_modules inside container
+    command: npm run dev     # ✅ runs ts-node-dev for hot reload
 
-  # Production service
+  # -------------------------------
+  # 🚀 Production Service
+  # -------------------------------
   app:
     build:
       context: .
@@ -65,7 +73,9 @@ services:
       BCRYPT_PASSWORD: ${BCRYPT_PASSWORD}
       SALT_ROUNDS: ${SALT_ROUNDS}
 
-  # Test service
+  # -------------------------------
+  # 🧪 Test Service
+  # -------------------------------
   app-test:
     build:
       context: .
@@ -83,6 +93,9 @@ services:
       DB_NAME: ${TEST_DB_NAME}
     command: sh -c "npm run migrate:test && npm run test"
 
+# -------------------------------
+# 💾 Volumes
+# -------------------------------
 volumes:
   postgres_data:
 

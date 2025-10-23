@@ -9,7 +9,7 @@ export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   console.error("Error occurred:", {
     message: err.message,
@@ -41,6 +41,20 @@ export const errorHandler = (
     });
   }
 
+  if (err.name === "DuplicateEmailError") {
+    return res.status(400).json({
+      message: err.message,
+      type: "DuplicateEmailError",
+    });
+  }
+
+  if (err.name === "NotFoundError") {
+    return res.status(404).json({
+      message: err.message,
+      type: "NotFoundError",
+    });
+  }
+
   // Default to 500 internal server error
   res.status(500).json({
     message: "Internal server error",
@@ -55,7 +69,7 @@ export const errorHandler = (
  * Async handler wrapper to catch errors in async route handlers
  */
 export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>,
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);

@@ -63,7 +63,7 @@ describe("User API Endpoints", () => {
 
       expect(res.status).toBe(400);
       expect(res.body.message).toBe(
-        "Password must be at least 6 characters long",
+        "Password must be at least 8 characters long",
       );
     });
 
@@ -159,7 +159,7 @@ describe("User API Endpoints", () => {
 
       expect(res.status).toBe(400);
       expect(res.body.message).toBe(
-        "Password must be at least 6 characters long",
+        "Password must be at least 8 characters long",
       );
     });
 

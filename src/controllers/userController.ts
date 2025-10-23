@@ -1,39 +1,33 @@
 import { Request, Response } from "express";
-import { User, IUser } from "../models/User";
+import { User } from "../models/User";
 import { generateToken } from "../helpers/jwt";
-import { parseId, ValidationError } from "../utils/validators";
+import { ValidationError } from "../utils/validators";
+import { asyncHandler } from "../middlewares/errorHandler"; // import your wrapper
+import { DuplicateEmailError, NotFoundError } from "../utils/errors";
 
-type EmailParams = { email: string };
+type EmailParams = { email?: string };
 
 export class UserController {
   constructor(private userModel: User) {}
 
-  async getAll(req: Request, res: Response) {
-    try {
-      const users = await this.userModel.getAll();
-      res.json(users);
-    } catch (error) {
-      console.error("Error getting all users:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  }
+  // GET /api/users
+  getAll = asyncHandler(async (req: Request, res: Response) => {
+    const users = await this.userModel.getAll();
+    res.json(users);
+  });
 
-  async getByEmail(req: Request<{ email: string }>, res: Response) {
-    try {
-      const email = req.params?.email;
-      const user = await this.userModel.getByEmail(email);
-      if (!user) return res.status(404).json({ message: "User not found" });
-      res.json(user);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        return res.status(400).json({ message: error.message });
-      }
-      console.error("Error getting user by Email:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  }
+  // GET /api/users/:email
+  getByEmail = asyncHandler(async (req: Request, res: Response) => {
+    const email = req.params.email!;
+    const user = await this.userModel.getByEmail(email);
 
-  async create(req: Request, res: Response) {
+    if (!user) throw new NotFoundError("User not found");
+
+    res.json(user);
+  });
+
+  // POST /api/users
+  create = asyncHandler(async (req: Request, res: Response) => {
     try {
       const newUser = await this.userModel.create(req.body);
 
@@ -53,72 +47,57 @@ export class UserController {
       });
     } catch (error: any) {
       if (error.code === "23505") {
-        return res.status(400).json({ message: "Email already exists" });
+        throw new DuplicateEmailError("Email already exists");
       }
-      console.error("Error creating user:", error);
-      res.status(500).json({ message: "Internal server error" });
+      throw error;
     }
-  }
+  });
 
-  async update(req: Request<EmailParams>, res: Response) {
-    try {
-      const email = req.params?.email;
-      const updated = await this.userModel.update(email, req.body);
-      if (!updated) return res.status(404).json({ message: "User not found" });
-      res.json(updated);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        return res.status(400).json({ message: error.message });
-      }
-      console.error("Error updating user:", error);
-      res.status(500).json({ message: "Internal server error" });
+  // PUT /api/users/:email
+  update = asyncHandler(async (req: Request<EmailParams>, res: Response) => {
+    const email = req.params.email!;
+    const updated = await this.userModel.update(email, req.body);
+
+    if (!updated) throw new NotFoundError("User not found");
+
+    res.json(updated);
+  });
+
+  // DELETE /api/users/:email
+  delete = asyncHandler(async (req: Request<EmailParams>, res: Response) => {
+    const email = req.params.email!;
+    const deleted = await this.userModel.delete(email);
+
+    if (!deleted) throw new NotFoundError("User not found");
+
+    res.json({ message: "User deleted" });
+  });
+
+  // POST /api/users/authenticate
+  authenticateUser = asyncHandler(async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    const user = await this.userModel.authenticate(email, password);
+
+    if (!user) {
+      throw new ValidationError("Invalid credentials");
     }
-  }
 
-  async delete(req: Request<EmailParams>, res: Response) {
-    try {
-      const email = req.params?.email;
-      const deleted = await this.userModel.delete(email);
-      if (!deleted) return res.status(404).json({ message: "User not found" });
-      res.json({ message: "User deleted" });
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        return res.status(400).json({ message: error.message });
-      }
-      console.error("Error deleting user:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  }
+    const token = generateToken({
+      id: user.id!,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone,
+    });
 
-  async authenticateUser(req: Request, res: Response) {
-    try {
-      const { email, password } = req.body;
-      const user = await this.userModel.authenticate(email, password);
-
-      if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      const token = generateToken({
-        id: user.id!,
+    res.json({
+      message: "Login successful",
+      user: {
+        id: user.id,
         fullName: user.fullName,
         email: user.email,
         phone: user.phone,
-      });
-
-      res.json({
-        message: "Login successful",
-        user: {
-          id: user.id,
-          fullName: user.fullName,
-          email: user.email,
-          phone: user.phone,
-        },
-        token: token,
-      });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Server error" });
-    }
-  }
+      },
+      token,
+    });
+  });
 }

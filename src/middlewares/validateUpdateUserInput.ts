@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
   ValidationError,
+  getMissingFields,
   validateFullName,
   validatePalestinePhone,
   validatePassword,
@@ -15,10 +16,15 @@ export const validateUpdateUserInput = (
     const { fullName, phone, password } = req.body;
 
     // If no fields provided, return error
-    if (!fullName && !phone && !password) {
-      return res.status(400).json({
-        message: "At least one field (fullName, phone, or password) must be provided",
-      });
+    const missing = getMissingFields(req.body, [
+      "fullName",
+      "phone",
+      "password",
+    ]);
+    if (missing.length) {
+      return res
+        .status(400)
+        .json({ message: `Missing required fields: ${missing.join(", ")}` });
     }
 
     // Validate only provided fields

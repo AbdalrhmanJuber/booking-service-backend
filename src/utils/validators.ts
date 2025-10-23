@@ -77,7 +77,7 @@ export const validateEmail = (email: string): boolean => {
  * @returns true if valid
  * @throws ValidationError if invalid
  */
-export const validatePassword = (password: string, minLength = 6): boolean => {
+export const validatePassword = (password: string, minLength = 8): boolean => {
   if (!password || password.length < minLength) {
     throw new ValidationError(
       `Password must be at least ${minLength} characters long`

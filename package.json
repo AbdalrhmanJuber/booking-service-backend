@@ -8,7 +8,7 @@
   "scripts": {
     "prestart": "npm run build",
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
+    "dev": "nodemon --exec ts-node src/server.ts",
     "watch": "tsc-watch --esModuleInterop src/server.ts --outDir ./dist --onSuccess \"node ./dist/server.js\"",
     "test": "ts-node node_modules/jasmine/bin/jasmine.js",
     "pretest": "npm run migrate:test",
@@ -16,7 +16,8 @@
     "migrate:up": "db-migrate up --config ./database.js",
     "migrate:down": "db-migrate down --config ./database.js",
     "migrate:create": "db-migrate create --config ./database.js",
-    "migrate:test": "db-migrate up --config ./database.js --env test"
+    "migrate:test": "db-migrate up --config ./database.js --env test",
+    "debug": "ndb src/server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -42,6 +43,7 @@
     "@types/supertest": "^6.0.3",
     "jasmine": "^5.12.0",
     "jasmine-spec-reporter": "^7.0.0",
+    "nodemon": "^3.1.10",
     "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
     "tsc-watch": "^7.2.0",
