@@ -8,8 +8,7 @@ import { authRateLimit } from "../config/rateLimits";
 import { validateUpdateUserInput } from "../middlewares/validateUpdateUserInput";
 
 const router = Router();
-const userModel = new User(pool);
-const controller = new UserController(userModel);
+const controller = new UserController(new User(pool));
 
 router.get("/", authenticate, controller.getAll.bind(controller));
 router.get("/:email", authenticate, controller.getByEmail.bind(controller));
@@ -21,6 +20,4 @@ router.put(
 );
 router.delete("/:email", authenticate, controller.delete.bind(controller));
 
-router.post("/signin",authRateLimit,controller.authenticateUser.bind(controller)); // login
-router.post("/signup", validateUserInput, controller.create.bind(controller)); // Register
 export default router;

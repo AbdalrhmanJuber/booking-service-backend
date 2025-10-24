@@ -1,7 +1,7 @@
 {
-  "name": "creating_api_with_postgrsl_express",
+  "name": "Booking service",
   "version": "1.0.0",
-  "description": "Online storefront backend app",
+  "description": "Booking service api",
   "license": "ISC",
   "author": "Abdelrahman Jaber",
   "main": "server.ts",

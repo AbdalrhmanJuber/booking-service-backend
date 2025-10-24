@@ -26,33 +26,6 @@ export class UserController {
     res.json(user);
   });
 
-  // POST /api/users
-  create = asyncHandler(async (req: Request, res: Response) => {
-    try {
-      const newUser = await this.userModel.create(req.body);
-
-      const token = generateToken({
-        id: newUser.id!,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        phone: newUser.phone,
-      });
-
-      res.status(201).json({
-        id: newUser.id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        phone: newUser.phone,
-        token,
-      });
-    } catch (error: any) {
-      if (error.code === "23505") {
-        throw new DuplicateEmailError("Email already exists");
-      }
-      throw error;
-    }
-  });
-
   // PUT /api/users/:email
   update = asyncHandler(async (req: Request<EmailParams>, res: Response) => {
     const email = req.params.email!;
@@ -73,31 +46,4 @@ export class UserController {
     res.json({ message: "User deleted" });
   });
 
-  // POST /api/users/authenticate
-  authenticateUser = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    const user = await this.userModel.authenticate(email, password);
-
-    if (!user) {
-      throw new ValidationError("Invalid credentials");
-    }
-
-    const token = generateToken({
-      id: user.id!,
-      fullName: user.fullName,
-      email: user.email,
-      phone: user.phone,
-    });
-
-    res.json({
-      message: "Login successful",
-      user: {
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone,
-      },
-      token,
-    });
-  });
 }

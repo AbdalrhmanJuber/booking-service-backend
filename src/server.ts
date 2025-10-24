@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import userRoutes from "./routes/userRoutes";
+import authRoutes from "./routes/authRoutes";
 import dotenv from "dotenv";
 import { validateEnv } from "./config/env";
 import { connectDB } from "./config/database";
@@ -30,6 +31,7 @@ app.use(express.json());
 const logFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
 app.use(morgan(logFormat));
 
+app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
 app.use((req: Request, res: Response) => {
@@ -45,6 +47,18 @@ app.get("/", function (_req: Request, res: Response) {
 
 // Error handler middleware (must be last)
 app.use(errorHandler);
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (err) => {
+  console.error("💥 Uncaught Exception:", err);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (reason, _promise) => {
+  console.error("💥 Unhandled Promise Rejection:", reason);
+  process.exit(1);
+});
 
 // Connect to database and start server
 if (process.env.NODE_ENV !== "test") {

@@ -25,6 +25,7 @@ export const validateUpdateUserInput = (
       return res
         .status(400)
         .json({ message: `Missing required fields: ${missing.join(", ")}` });
+
     }
 
     // Validate only provided fields
