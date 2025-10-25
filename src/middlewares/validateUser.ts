@@ -14,11 +14,11 @@ export const validateUserInput = (
   next: NextFunction,
 ) => {
   try {
-    const { fullName, email, phone, password } = req.body;
+    const { full_name, email, phone, password } = req.body;
 
     // Check missing fields
     const missing = getMissingFields(req.body, [
-      "fullName",
+      "full_name",
       "email",
       "phone",
       "password",
@@ -30,7 +30,7 @@ export const validateUserInput = (
     }
 
     // Validate fields
-    validateFullName(fullName);
+    validateFullName(full_name);
     validateEmail(email);
     validatePalestinePhone(phone);
     validatePassword(password);

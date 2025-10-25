@@ -1,15 +1,23 @@
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 dotenv.config();
 
 export interface IUser {
-  id?: number;
-  fullName: string;
+  id?: string; // UUID from the database
+  full_name: string;
   email: string;
-  phone: string;
-  password: string;
+  phone?: string;
+  birthday?: Date; // optional birthday field
+  password: string; // store the hashed password
+  passwordResetToken?: string | null;
+  passwordResetExpires?: Date | null;
+  isEmailVerified?: boolean;
+  status?: "pending" | "active" | "disabled";
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export class User {
@@ -31,11 +39,35 @@ export class User {
     const saltedPassword = password + this.pepper;
     return await bcrypt.compare(saltedPassword, hash);
   }
+
+  async createPasswordResettoken(email: string): Promise<string> {
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await this.pool.query(
+      `
+    UPDATE users
+    SET "password_reset_token" = $1,
+        "password_reset_expires" = $2
+    WHERE email = $3
+    `,
+      [hashedToken, expiresAt, email],
+    );
+
+    return resetToken;
+  }
+
   async getAll(): Promise<IUser[]> {
     const result = await this.pool.query(
       `SELECT
          id,
-         "fullName",
+         "full_name",
          "email",
          "phone"
        FROM users`,
@@ -47,7 +79,7 @@ export class User {
     const result = await this.pool.query(
       `SELECT
          id,
-         "fullName",
+         "full_name",
          "email",
          "phone"
        FROM users
@@ -60,12 +92,12 @@ export class User {
   async create(user: IUser): Promise<IUser> {
     const hashedPassword = await this.hashPassword(user.password);
     const result = await this.pool.query(
-      `INSERT INTO users ("fullName", "email", "phone","password") VALUES ($1, $2, $3, $4) RETURNING 
+      `INSERT INTO users ("full_name", "email", "phone","password") VALUES ($1, $2, $3, $4) RETURNING
          id,
-         "fullName",
+         "full_name",
          "email",
          "phone"`,
-      [user.fullName, user.email, user.phone, hashedPassword],
+      [user.full_name, user.email, user.phone, hashedPassword],
     );
     return result.rows[0];
   }
@@ -74,16 +106,16 @@ export class User {
     const hashedPassword = await this.hashPassword(user.password);
     const result = await this.pool.query(
       `UPDATE users
-         SET "fullName" = $1,
+         SET "full_name" = $1,
               "phone" = $2,
              "password"  = $3
        WHERE email = $4
        RETURNING
          id,
-         "fullName" ,
+         "full_name" ,
          "email",
          "phone"`,
-      [user.fullName, user.phone, hashedPassword, email],
+      [user.full_name, user.phone, hashedPassword, email],
     );
     return result.rows[0] || null;
   }
@@ -97,7 +129,7 @@ export class User {
 
   async authenticate(email: string, password: string): Promise<IUser | null> {
     const result = await this.pool.query(
-      `SELECT id, "fullName", "email", "phone", "password"
+      `SELECT id, "full_name", "email", "phone", "password"
         FROM users
         WHERE "email" = $1`,
       [email],

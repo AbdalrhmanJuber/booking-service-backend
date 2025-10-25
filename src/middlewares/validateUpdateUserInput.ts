@@ -13,11 +13,11 @@ export const validateUpdateUserInput = (
   next: NextFunction,
 ) => {
   try {
-    const { fullName, phone, password } = req.body;
+    const { full_name, phone, password } = req.body;
 
     // If no fields provided, return error
     const missing = getMissingFields(req.body, [
-      "fullName",
+      "full_name",
       "phone",
       "password",
     ]);
@@ -29,7 +29,7 @@ export const validateUpdateUserInput = (
     }
 
     // Validate only provided fields
-    if (fullName) validateFullName(fullName);
+    if (full_name) validateFullName(full_name);
     if (phone) validatePalestinePhone(phone);
     if (password) validatePassword(password);
 

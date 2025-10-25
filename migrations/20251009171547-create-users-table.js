@@ -4,37 +4,52 @@ var dbm;
 var type;
 var seed;
 
-/**
- * We receive the dbmigrate dependency from dbmigrate initially.
- * This enables us to not have to rely on NODE_PATH.
- */
 exports.setup = function (options, seedLink) {
   dbm = options.dbmigrate;
   type = dbm.dataType;
   seed = seedLink;
 };
 
+exports.up = async function (db) {
+  // ensure required Postgres extensions
+  await db.runSql(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
+  await db.runSql(`CREATE EXTENSION IF NOT EXISTS "citext";`);
 
-exports.up = function (db) {
-  return db
-    .createTable("users", {
-      id: { type: "int", primaryKey: true, autoIncrement: true },
-      fullName: { type: "string", notNull: true },
-      email: { type: "string", notNull: true, unique: true },
-      phone: { type: "string", notNull: true },
-      password: { type: "string", notNull: true },
-    })
-    .then(() => {
-      return db.addIndex("users", "idx_users_email", ["email"], true);
-    });
+  // ensure enum type exists
+  await db.runSql(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_status') THEN
+        CREATE TYPE user_status AS ENUM ('pending','active','disabled');
+      END IF;
+    END$$;
+  `);
+
+  // create users table
+  await db.runSql(`
+    CREATE TABLE IF NOT EXISTS users (
+      id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      full_name         VARCHAR(120) NOT NULL,
+      email             CITEXT NOT NULL UNIQUE,
+      phone             VARCHAR(32),
+      birthday          DATE,
+      password          VARCHAR(255),
+      password_reset_token VARCHAR(255),
+      password_reset_expires timestamptz,
+      is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+      status            user_status NOT NULL DEFAULT 'pending',
+      created_at        timestamptz NOT NULL DEFAULT now(),
+      updated_at        timestamptz NOT NULL DEFAULT now()
+    );
+  `);
 };
 
-exports.down = function (db) {
-  return db
-    .removeIndex("users", "idx_users_email")
-    .then(() => db.dropTable("users"));
+exports.down = async function (db) {
+  await db.runSql(`DROP TABLE IF EXISTS users CASCADE;`);
+  await db.runSql(`DROP TYPE IF EXISTS user_status;`);
 };
 
 exports._meta = {
   version: 1,
 };
+
