@@ -19,5 +19,5 @@ router.post(
 router.post("/forgot-password", authController.forgotPassword.bind(authController));
 
 // 🔹 Step 2: User resets password using the token
-router.post("/reset-password", authController.requesetPasswordReset.bind(authController));
+router.patch("/reset-password:token", authController.requesetPasswordReset.bind(authController));
 export default router;

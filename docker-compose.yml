@@ -71,6 +71,12 @@ services:
       PORT: ${PORT}
       BCRYPT_PASSWORD: ${BCRYPT_PASSWORD}
       SALT_ROUNDS: ${SALT_ROUNDS}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
 
   # -------------------------------
   # 🧪 Test Service

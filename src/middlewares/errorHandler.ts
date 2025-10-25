@@ -55,6 +55,13 @@ export const errorHandler = (
     });
   }
 
+  if (err.name === "EmailError") {
+    return res.status(500).json({
+      message: err.message,
+      type: "EmailError",
+    });
+  }
+
   // Default to 500 internal server error
   res.status(500).json({
     message: "Internal server error",

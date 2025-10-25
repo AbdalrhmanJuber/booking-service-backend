@@ -62,6 +62,15 @@ export class User {
 
     return resetToken;
   }
+  async clearResetToken(userId: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE users
+     SET "password_reset_token" = NULL,
+         "password_reset_expires" = NULL
+     WHERE id = $1`,
+      [userId],
+    );
+  }
 
   async getAll(): Promise<IUser[]> {
     const result = await this.pool.query(
