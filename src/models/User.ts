@@ -24,7 +24,7 @@ export class User {
   private pepper = process.env.BCRYPT_PASSWORD || "";
   private saltRounds = parseInt(process.env.SALT_ROUNDS || "10", 10);
 
-  constructor(private pool: Pool) {}
+  constructor(public pool: Pool) {}
   private async hashPassword(password: string): Promise<string> {
     const saltedPassword = password + this.pepper;
     const salt = await bcrypt.genSalt(this.saltRounds);
@@ -71,7 +71,35 @@ export class User {
       [userId],
     );
   }
+  async findPasswordHashToken(
+    passwordResetToken: string,
+  ): Promise<IUser | null> {
+    const result = await this.pool.query(
+      `SELECT
+       id,
+       "full_name",
+       "email",
+       "phone"
+     FROM users
+     WHERE "password_reset_token" = $1
+       AND "password_reset_expires" > NOW()`,
+      [passwordResetToken],
+    );
 
+    return result.rows[0] || null;
+  }
+
+  async resetPassword(userId: string, newPassword: string): Promise<void> {
+    const hashedPassword = await this.hashPassword(newPassword);
+    await this.pool.query(
+      `UPDATE users
+     SET "password" = $1,
+         "password_reset_token" = NULL,
+         "password_reset_expires" = NULL
+     WHERE id = $2`,
+      [hashedPassword, userId],
+    );
+  }
   async getAll(): Promise<IUser[]> {
     const result = await this.pool.query(
       `SELECT

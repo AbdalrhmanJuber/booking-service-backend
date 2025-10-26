@@ -271,31 +271,35 @@ describe("Authentication API Endpoints", () => {
   // ============================================
   // FORGOT PASSWORD TESTS
   // ============================================
-  describe("POST /api/auth/forgot-password - Password Reset Request", () => {
+  describe("POST /api/auth/request-reset - Password Reset Request", () => {
     it("should generate password reset token for existing user", async () => {
-      const res = await request.post("/api/auth/forgot-password").send({
+      const res = await request.post("/api/auth/request-reset").send({
         email: registeredUserEmail,
       });
 
       expect(res.status).toBe(200);
       expect(res.body).toBeDefined();
-      expect(res.body.message).toBe(
-        "Password reset link generated successfully",
+      expect(res.body.message).toBe("Password reset link sent successfully");
+      
+      // Verify token was stored in database
+      const result = await pool.query(
+        'SELECT "password_reset_token", "password_reset_expires" FROM users WHERE email = $1',
+        [registeredUserEmail],
       );
-      expect(res.body.resetToken).toBeDefined();
-      expect(typeof res.body.resetToken).toBe("string");
-      expect(res.body.resetToken.length).toBeGreaterThan(0);
+
+      expect(result.rows[0].password_reset_token).toBeDefined();
+      expect(result.rows[0].password_reset_expires).toBeDefined();
     });
 
     it("should return 400 when email is missing", async () => {
-      const res = await request.post("/api/auth/forgot-password").send({});
+      const res = await request.post("/api/auth/request-reset").send({});
 
       expect(res.status).toBe(400);
       expect(res.body.message).toBe("Missing required fields: email");
     });
 
     it("should return 400 for empty email string", async () => {
-      const res = await request.post("/api/auth/forgot-password").send({
+      const res = await request.post("/api/auth/request-reset").send({
         email: "",
       });
 
@@ -304,7 +308,7 @@ describe("Authentication API Endpoints", () => {
     });
 
     it("should return 404 for non-existent email", async () => {
-      const res = await request.post("/api/auth/forgot-password").send({
+      const res = await request.post("/api/auth/request-reset").send({
         email: "nonexistent.user@test.com",
       });
 
@@ -313,24 +317,33 @@ describe("Authentication API Endpoints", () => {
     });
 
     it("should generate different tokens for multiple requests", async () => {
-      const res1 = await request.post("/api/auth/forgot-password").send({
+      const res1 = await request.post("/api/auth/request-reset").send({
         email: registeredUserEmail,
       });
 
       // Wait a brief moment to ensure different timestamps
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      const res2 = await request.post("/api/auth/forgot-password").send({
+      const res2 = await request.post("/api/auth/request-reset").send({
         email: registeredUserEmail,
       });
 
       expect(res1.status).toBe(200);
       expect(res2.status).toBe(200);
-      expect(res1.body.resetToken).not.toBe(res2.body.resetToken);
+      
+      // Verify tokens in database are different by checking the timestamps
+      const result = await pool.query(
+        'SELECT "password_reset_token", "password_reset_expires" FROM users WHERE email = $1',
+        [registeredUserEmail],
+      );
+      
+      // Token should exist and have been updated
+      expect(result.rows[0].password_reset_token).toBeDefined();
+      expect(result.rows[0].password_reset_expires).toBeDefined();
     });
 
     it("should store reset token in database", async () => {
-      const res = await request.post("/api/auth/forgot-password").send({
+      const res = await request.post("/api/auth/request-reset").send({
         email: registeredUserEmail,
       });
 

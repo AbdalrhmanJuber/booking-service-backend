@@ -4,6 +4,12 @@ import nodemailer, { TransportOptions, SendMailOptions } from "nodemailer";
  * Send an email using Nodemailer
  */
 export const sendEmail = async (options: SendMailOptions): Promise<void> => {
+  // Skip email sending in test environment
+  if (process.env.NODE_ENV === "test") {
+    console.log("📧 Email sending skipped in test environment");
+    return;
+  }
+
   // 1️⃣ Create transporter
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,

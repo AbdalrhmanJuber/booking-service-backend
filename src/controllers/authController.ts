@@ -9,6 +9,7 @@ import {
   NotFoundError,
 } from "../utils/errors";
 import { sendEmail } from "../utils/email";
+import crypto from "crypto";
 
 export class AuthController {
   constructor(private userModel: User) {}
@@ -83,9 +84,11 @@ export class AuthController {
     const user = await this.userModel.getByEmail(email);
     if (!user) throw new NotFoundError("User not found");
 
-    const resetToken = await this.userModel.createPasswordResettoken(user.id!);
+    const resetToken = await this.userModel.createPasswordResettoken(
+      user.email,
+    );
 
-    const resetURL = `${req.protocol}://${req.get("host")}/api/auth/reset-password/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/customer/new-password?token=${resetToken}`;
 
     const message = `Forgot your password? Submit a PATCH request with your new password to: ${resetURL}.
 If you didn't request a password reset, please ignore this email.`;
@@ -109,5 +112,41 @@ If you didn't request a password reset, please ignore this email.`;
       );
     }
   });
-  requesetPasswordReset = async (req: Request, res: Response) => {};
+
+  resetPassword = asyncHandler(async (req: Request, res: Response) => {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      throw new ValidationError(
+        "Missing required fields: token or newPassword",
+      );
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    // 3️⃣ Find the user by hashed token and ensure it's not expired
+    const user = await this.userModel.findPasswordHashToken(hashedToken);
+    if (!user) throw new NotFoundError("Invalid or expired reset token");
+
+    // 4️⃣ Reset password using new model method
+    await this.userModel.resetPassword(user.id!, newPassword);
+
+    const jwtToken = generateToken({
+      id: user.id!,
+      full_name: user.full_name,
+      email: user.email,
+      phone: user.phone,
+    });
+
+    res.status(200).json({
+      message: "Password reset successful",
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        phone: user.phone,
+      },
+      token: jwtToken,
+    });
+  });
 }
