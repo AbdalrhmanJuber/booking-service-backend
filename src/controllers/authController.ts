@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import { User } from "../models/User";
-import { generateToken } from "../helpers/jwt";
 import { ValidationError } from "../utils/validators";
 import { asyncHandler } from "../middlewares/errorHandler";
 import {
@@ -10,32 +9,15 @@ import {
 } from "../utils/errors";
 import { sendEmail } from "../utils/email";
 import crypto from "crypto";
+import { createSendToken } from "../utils/createSendtoken";
 
 export class AuthController {
   constructor(private userModel: User) {}
 
-  // POST /api/auth/register
-  register = asyncHandler(async (req: Request, res: Response) => {
+  register = asyncHandler(async (req, res) => {
     try {
       const newUser = await this.userModel.create(req.body);
-
-      const token = generateToken({
-        id: newUser.id!,
-        full_name: newUser.full_name,
-        email: newUser.email,
-        phone: newUser.phone,
-      });
-
-      res.status(201).json({
-        message: "User registered successfully",
-        user: {
-          id: newUser.id,
-          full_name: newUser.full_name,
-          email: newUser.email,
-          phone: newUser.phone,
-        },
-        token,
-      });
+      createSendToken(newUser, 201, res, "User registered successfully");
     } catch (error: any) {
       if (error.code === "23505") {
         throw new DuplicateEmailError("Email already exists");
@@ -44,7 +26,6 @@ export class AuthController {
     }
   });
 
-  // POST /api/auth/login
   login = asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
@@ -57,23 +38,7 @@ export class AuthController {
       throw new ValidationError("Invalid credentials");
     }
 
-    const token = generateToken({
-      id: user.id!,
-      full_name: user.full_name,
-      email: user.email,
-      phone: user.phone,
-    });
-
-    res.json({
-      message: "Login successful",
-      user: {
-        id: user.id,
-        full_name: user.full_name,
-        email: user.email,
-        phone: user.phone,
-      },
-      token,
-    });
+    createSendToken(user, 200, res, "Login successful");
   });
 
   forgotPassword = asyncHandler(async (req: Request, res: Response) => {
@@ -131,22 +96,6 @@ If you didn't request a password reset, please ignore this email.`;
     // 4️⃣ Reset password using new model method
     await this.userModel.resetPassword(user.id!, newPassword);
 
-    const jwtToken = generateToken({
-      id: user.id!,
-      full_name: user.full_name,
-      email: user.email,
-      phone: user.phone,
-    });
-
-    res.status(200).json({
-      message: "Password reset successful",
-      user: {
-        id: user.id,
-        full_name: user.full_name,
-        email: user.email,
-        phone: user.phone,
-      },
-      token: jwtToken,
-    });
+    createSendToken(user, 200, res, "Password reset successful");
   });
 }
