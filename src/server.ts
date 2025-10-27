@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import helmet from "helmet";
+import hpp from "hpp";
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
 import dotenv from "dotenv";
@@ -20,6 +21,9 @@ const port: number = +process.env.PORT!;
 
 // Set security hardening
 app.use(helmet());
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp());
 
 app.use(
   cors({
