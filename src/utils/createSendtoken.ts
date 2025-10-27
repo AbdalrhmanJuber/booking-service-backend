@@ -16,12 +16,12 @@ export const createSendToken = (
   });
 
   // Optional cookie setup
-  // res.cookie("jwt", token, {
-  //   httpOnly: true,
-  //   secure: process.env.NODE_ENV === "production",
-  //   sameSite: "strict",
-  //   maxAge: 24 * 60 * 60 * 1000, // 1 day
-  // });
+  res.cookie("jwt", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+  });
 
   return res.status(statusCode).json({
     status: "success",
