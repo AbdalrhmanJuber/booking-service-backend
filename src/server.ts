@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import helmet from "helmet";
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
 import dotenv from "dotenv";
@@ -16,6 +17,9 @@ validateEnv();
 
 const app: express.Application = express();
 const port: number = +process.env.PORT!;
+
+// Set security hardening
+app.use(helmet());
 
 app.use(
   cors({
